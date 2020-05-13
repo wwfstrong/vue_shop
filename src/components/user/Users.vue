@@ -11,12 +11,12 @@
       <!-- 搜索添加区 -->
       <el-row :gutter="20">
         <el-col :span="7">
-          <el-input placeholder="请输入内容">
-            <el-button slot="append" icon="el-icon-search"></el-button>
+          <el-input placeholder="请输入内容" v-model="queryInfo.query" clearable @clear="getUserList">
+            <el-button slot="append" icon="el-icon-search" @click="getUserList"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary">添加用户</el-button>
+          <el-button type="primary" @click="addDialogVisible=true">添加用户</el-button>
         </el-col>
       </el-row>
       <!-- 用户列表区域 -->
@@ -28,7 +28,7 @@
         <el-table-column label="角色" prop="role_name"></el-table-column>
         <el-table-column label="状态">
           <template slot-scope="scope">
-            <el-switch v-model="scope.row.mg_state"></el-switch>
+            <el-switch v-model="scope.row.mg_state" @change="userStateChanged(scope.row)"></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180">
@@ -55,11 +55,54 @@
         :total="total"
       ></el-pagination>
     </el-card>
+    <!-- 添加用户的对话框 -->
+    <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+      <!-- 内容主题区 -->
+      <el-form :model="addFrom" :rules="addFromRules" ref="addFromRef" label-width="70px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="addFrom.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="addFrom.password" type="password"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="addFrom.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="addFrom.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <!-- 底部区域 -->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 export default {
   data() {
+    // 验证邮箱的规则
+    var checkEmail = (rule, value, cb) => {
+      //验证邮箱的正则表达式
+      const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
+      if (regEmail.test(value)) {
+        //合法的邮箱
+        return cb();
+      }
+      cb(new Error("请输入合法的邮箱"));
+    };
+    //验证手机号的规则
+    var checkMobile = (rule, value, cb) => {
+      //验证手机号的正则表达式
+      const regMobile = /^(0|86|17951)?(13[0-9]|15[0123456789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+      if (regMobile.test(value)) {
+        //合法的手机号
+        return cb();
+      }
+      cb(new Error("请输入合法的手机号"));
+    };
     return {
       //获取用户列表的参数对象
       queryInfo: {
@@ -69,7 +112,49 @@ export default {
         pagesize: 2
       },
       userList: [],
-      total: 0
+      total: 0,
+      //控制对话框的显示和隐藏
+      addDialogVisible: false,
+      //   添加用户表单数据
+      addFrom: {
+        username: "",
+        password: "",
+        email: "",
+        mobile: ""
+      },
+      //   添加表单的验证规则对象
+      addFromRules: {
+        //   验证用户名是否合法
+        username: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          {
+            min: 3,
+            max: 10,
+            message: "用户名长度在 3 到 10 个字符之间",
+            trigger: "blur"
+          }
+        ],
+        //   验证密码是否合法
+        password: [
+          { required: true, message: "请输入密码", trigger: "blur" },
+          {
+            min: 6,
+            max: 15,
+            message: "密码长度在 6 到 15 个字符",
+            trigger: "blur"
+          }
+        ],
+        //   验证密邮箱是否合法
+        email: [
+          { required: true, message: "请输入邮箱", trigger: "blur" },
+          { validator: checkEmail, trigger: "blur" }
+        ],
+        //   验证手机号是否合法
+        mobile: [
+            { required: true, message: "请输入手机", trigger: "blur" },
+            { validator: checkMobile, trigger: "blur" }
+        ]
+      }
     };
   },
   created() {
@@ -87,14 +172,25 @@ export default {
       console.log(res);
     },
     // 监听 pagesize 改变事件
-    handleSizeChange(newSize){
-        this.queryInfo.pagesize = newSize
-        this.getUserList()
+    handleSizeChange(newSize) {
+      this.queryInfo.pagesize = newSize;
+      this.getUserList();
     },
     // 监听 页码值 改变事件
-    handleCurrentChange(newPage){
-        this.queryInfo.pagenum = newPage
-        this.getUserList()
+    handleCurrentChange(newPage) {
+      this.queryInfo.pagenum = newPage;
+      this.getUserList();
+    },
+    //监听 switch 开关状态的改变
+    async userStateChanged(userinfo) {
+      const { data: res } = await this.$http.put(
+        `users/${userinfo.id}/state/${userinfo.mg_state}`
+      );
+      if (res.meta.status !== 200) {
+        userinfo.mg_state = !userinfo.mg_state;
+        return this.$message.error("更新用户状态失败！");
+      }
+      this.$message.success("更新用户状态成功！");
     }
   }
 };
