@@ -215,7 +215,6 @@ export default {
         return this.$message.error("获取用户列表失败！");
       this.userList = res.data.users;
       this.total = res.data.total;
-      console.log(res);
     },
     // 监听 pagesize 改变事件
     handleSizeChange(newSize) {
