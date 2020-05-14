@@ -12,7 +12,11 @@
       <!-- 权限列表区域 -->
       <el-table :data="rolesList" border stripe>
         <!-- 展开列 -->
-        <el-table-column type="expand"></el-table-column>
+        <el-table-column type="expand">
+          <template slot-scope="scope">
+            {{scope.row}}
+          </template>
+        </el-table-column>
         <!-- 索引列 -->
         <el-table-column type="index"></el-table-column>
         <el-table-column label="角色名称" prop="roleName"></el-table-column>
@@ -31,6 +35,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
+              @click="removeRoleById(scope.row.id)"
             >删除</el-button>
             <!-- 分配权限按钮 -->
             <el-button type="warning" icon="el-icon-setting" size="mini">分配权限</el-button>
@@ -202,6 +207,31 @@ export default {
         this.getRolesList();
       });
     },
+    async removeRoleById(id) {
+      //弹框询问用户是否删除数据
+      const confirmResult = await this.$confirm(
+        "此操作将永久删除该用户, 是否继续?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).catch(err => {
+        return err;
+      });
+
+      if (confirmResult !== "confirm") {
+        return this.$message.info("已取消删除");
+      }
+      const { data: res } = await this.$http.delete("roles/" + id);
+      if (res.meta.status !== 200) {
+        return this.$message.error("删除用户失败");
+      }
+      this.$message.success("删除用户成功");
+      //重新获取用户列表数据
+      this.getRolesList();
+    }
   }
 };
 </script>
