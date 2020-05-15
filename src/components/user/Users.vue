@@ -107,6 +107,14 @@
         <el-button type="primary" @click="editUserInfo">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 分配角色的对话框 -->
+    <el-dialog title="分配角色" :visible.sync="setRoleDialogVisible" width="50%">
+      <span>这是一段信息</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="setRoleDialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -200,7 +208,9 @@ export default {
           { required: true, message: "请输入手机", trigger: "blur" },
           { validator: checkMobile, trigger: "blur" }
         ]
-      }
+      },
+      //控制角色分配对话框的显示与隐藏
+      setRoleDialogVisible: false
     };
   },
   created() {
@@ -309,12 +319,12 @@ export default {
         return this.$message.info("已取消删除");
       }
       const { data: res } = await this.$http.delete("users/" + id);
-      if(res.meta.status !== 200){
-        return this.$message.error('删除用户失败')
+      if (res.meta.status !== 200) {
+        return this.$message.error("删除用户失败");
       }
-      this.$message.success('删除用户成功')
+      this.$message.success("删除用户成功");
       //重新获取用户列表数据
-        this.getUserList();
+      this.getUserList();
     }
   }
 };
