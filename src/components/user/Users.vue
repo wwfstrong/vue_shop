@@ -49,7 +49,12 @@
             ></el-button>
             <!-- 分配角色按钮 -->
             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+              <el-button
+                type="warning"
+                icon="el-icon-setting"
+                size="mini"
+                @click="setRole(scope.row)"
+              ></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -109,7 +114,21 @@
     </el-dialog>
     <!-- 分配角色的对话框 -->
     <el-dialog title="分配角色" :visible.sync="setRoleDialogVisible" width="50%">
-      <span>这是一段信息</span>
+      <div>
+        <p>当前用户：{{userInfo.username}}</p>
+        <p>当前角色：{{userInfo.role_name}}</p>
+        <p>
+          分配新角色：
+          <el-select v-model="selectedRoleId" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </p>
+      </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="setRoleDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="setRoleDialogVisible = false">确 定</el-button>
@@ -210,7 +229,13 @@ export default {
         ]
       },
       //控制角色分配对话框的显示与隐藏
-      setRoleDialogVisible: false
+      setRoleDialogVisible: false,
+      //需要被分配角色的用户信息
+      userInfo: {},
+      //角色列表
+      rolesList: [],
+      //已选中的角色Id值
+      selectedRoleId:''
     };
   },
   created() {
@@ -325,6 +350,17 @@ export default {
       this.$message.success("删除用户成功");
       //重新获取用户列表数据
       this.getUserList();
+    },
+    //展示分配角色的对话框
+    async setRole(userInfo) {
+      this.userInfo = userInfo;
+      //在展示对话框之前，获取所有角色的列表
+      const { data: res } = await this.$http.get("roles");
+      if (res.meta.status !== 200) {
+        return this.$message.error("获取角色列表失败！");
+      }
+      this.rolesList = res.data;
+      this.setRoleDialogVisible = true;
     }
   }
 };
