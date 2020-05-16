@@ -10,7 +10,7 @@
       <!-- 添加用户区域 -->
       <el-row>
         <el-col>
-          <el-button type="primary">添加分类</el-button>
+          <el-button type="primary" @click="showAddCateDialog">添加分类</el-button>
         </el-col>
       </el-row>
 
@@ -57,6 +57,26 @@
         :total="total"
       ></el-pagination>
     </el-card>
+    <!-- 添加分类的对话框 -->
+    <el-dialog title="添加分类" :visible.sync="addCateDialogVisible" width="50%">
+      <el-form
+        :model="addCateForm"
+        :rules="addCateFormRules"
+        ref="addCateFormRef"
+        label-width="100px"
+      >
+        <el-form-item label="分类名称：" prop="cat_name">
+          <el-input v-model="addCateForm.cat_name"></el-input>
+        </el-form-item>
+        <el-form-item label="父级分类：">
+          <el-input></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addCateDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addCateDialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -96,7 +116,24 @@ export default {
           //表示当前这一列使用模板名称
           template: "opt"
         }
-      ]
+      ],
+      // 控制添加分类对话框的显示与隐藏
+      addCateDialogVisible: false,
+      // 添加分类表单的数据对象
+      addCateForm: {
+        // 将要添加的分类的名称
+        cat_name: "",
+        // 父级分类的Id
+        cat_pid: 0,
+        // 分类的等级，默认要添加的是1级分类
+        cat_level: 0
+      },
+      // 添加分类表单的验证规则对象
+      addCateFormRules: {
+        cat_name: [
+          { required: true, message: "请输入分类名称", trigger: "blur" }
+        ]
+      }
     };
   },
   created() {
@@ -122,12 +159,16 @@ export default {
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage;
       this.getCateList();
+    },
+    // 点击按钮，展示添加分类的对话框
+    showAddCateDialog() {
+      this.addCateDialogVisible = true;
     }
   }
 };
 </script>
 <style lang="less" scoped>
-.treeTable{
-    margin-top: 15px;
+.treeTable {
+  margin-top: 15px;
 }
 </style>
