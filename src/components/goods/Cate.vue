@@ -298,10 +298,10 @@ export default {
           { cat_name: this.editForm.cat_name }
         );
         if (res.meta.status !== 200) {
-          this.$message.error("更新用户信息失败！");
+          this.$message.error("更新分类信息失败！");
         }
         console.log(res);
-        this.$message.success("更新用户信息成功！");
+        this.$message.success("更新分类信息成功！");
         //隐藏修改用户的对话框
         this.editCateDialogVisible = false;
         //重新获取用户列表数据
@@ -311,7 +311,7 @@ export default {
     async removeCateById(id) {
       //弹框询问用户是否删除数据
       const confirmResult = await this.$confirm(
-        "此操作将永久删除该用户, 是否继续?",
+        "此操作将永久删除该分类, 是否继续?",
         "提示",
         {
           confirmButtonText: "确定",
@@ -327,9 +327,9 @@ export default {
       }
       const { data: res } = await this.$http.delete("categories/" + id);
       if (res.meta.status !== 200) {
-        return this.$message.error("删除用户失败");
+        return this.$message.error("删除分类失败");
       }
-      this.$message.success("删除用户成功");
+      this.$message.success("删除分类成功");
       //重新获取用户列表数据
       this.getCateList();
     }
