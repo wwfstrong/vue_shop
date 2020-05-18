@@ -42,7 +42,12 @@
             <el-table-column type="expand">
               <template slot-scope="scope">
                 <!-- 循环渲染Tag标签 -->
-                <el-tag v-for="(item,i) in scope.row.attr_vals" :key="i" closable>{{item}}</el-tag>
+                <el-tag
+                  v-for="(item,i) in scope.row.attr_vals"
+                  :key="i"
+                  closable
+                  @close="handleClose(i,scope.row)"
+                >{{item}}</el-tag>
                 <!-- 输入文本框 -->
                 <el-input
                   class="input-new-tag"
@@ -95,7 +100,34 @@
           <!-- 静态属性表格 -->
           <el-table :data="onlyTableData" border stripe>
             <!-- 展开行 -->
-            <el-table-column type="expand"></el-table-column>
+            <el-table-column type="expand">
+              <template slot-scope="scope">
+                <!-- 循环渲染Tag标签 -->
+                <el-tag
+                  v-for="(item,i) in scope.row.attr_vals"
+                  :key="i"
+                  closable
+                  @close="handleClose(i,scope.row)"
+                >{{item}}</el-tag>
+                <!-- 输入文本框 -->
+                <el-input
+                  class="input-new-tag"
+                  v-if="scope.row.inputVisible"
+                  v-model="scope.row.inputValue"
+                  ref="saveTagInput"
+                  size="small"
+                  @keyup.enter.native="handleInputConfirm(scope.row)"
+                  @blur="handleInputConfirm(scope.row)"
+                ></el-input>
+                <!-- 添加按钮 -->
+                <el-button
+                  v-else
+                  class="button-new-tag"
+                  size="small"
+                  @click="showInput(scope.row)"
+                >+ New Tag</el-button>
+              </template>
+            </el-table-column>
             <!-- 索引列 -->
             <el-table-column type="index" label="序号"></el-table-column>
             <el-table-column label="属性名称" prop="attr_name"></el-table-column>
@@ -158,18 +190,18 @@
 <script>
 export default {
   data() {
-    //   商品分类列表
     return {
+      // 商品分类列表
       catelist: [],
-      //   级联选择框的配置对象
+      // 级联选择框的配置对象
       cateProps: {
         value: "cat_id",
         label: "cat_name",
         children: "children"
       },
-      //   级联选择框双向绑定到的数组
+      // 级联选择框双向绑定到的数组
       selectedCateKeys: [],
-      //   被激活的页签名称
+      // 被激活的页签名称
       activeName: "many",
       //动态参数数据
       manyTableData: [],
@@ -220,6 +252,8 @@ export default {
     async getParamsData() {
       if (this.selectedCateKeys.length !== 3) {
         this.selectedCateKeys = [];
+        this.manyTableData = [];
+        this.onlyTableData = [];
         return;
       }
       //根据所选分类的Id，和当前所处的面板，获取对应的参数
@@ -345,6 +379,10 @@ export default {
       row.attr_vals.push(row.inputValue.trim());
       row.inputValue = "";
       row.inputVisible = false;
+      this.saveAttrVals(row);
+    },
+    // 将对attr_vals的操作保存到数据库
+    async saveAttrVals(row) {
       //需要发起请求保存操作
       const { data: res } = await this.$http.put(
         `categories/${this.cateId}/attributes/${row.attr_id}`,
@@ -366,6 +404,11 @@ export default {
       this.$nextTick(_ => {
         this.$refs.saveTagInput.$refs.input.focus();
       });
+    },
+    // 删除对应的参数和选项
+    handleClose(i, row) {
+      row.attr_vals.splice(i, 1);
+      this.saveAttrVals(row);
     }
   },
   computed: {
