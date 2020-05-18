@@ -30,7 +30,12 @@
         <!-- 添加动态参数的面板 -->
         <el-tab-pane label="动态参数" name="many">
           <!-- 添加参数的按钮 -->
-          <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加参数</el-button>
+          <el-button
+            type="primary"
+            size="mini"
+            :disabled="isBtnDisabled"
+            @click="addDialogVisible = true"
+          >添加参数</el-button>
           <!-- 动态参数表格 -->
           <el-table :data="manyTableData" border stripe>
             <!-- 展开行 -->
@@ -39,7 +44,7 @@
             <el-table-column type="index" label="序号"></el-table-column>
             <el-table-column label="参数名称" prop="attr_name"></el-table-column>
             <el-table-column label="操作">
-              <template slot-scope="">
+              <template slot-scope>
                 <el-button type="primary" icon="el-icon-edit" size="mini">修改</el-button>
                 <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
               </template>
@@ -49,7 +54,12 @@
         <!-- 添加静态属性的面板 -->
         <el-tab-pane label="静态属性" name="only">
           <!-- 添加属性的按钮 -->
-          <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加属性</el-button>
+          <el-button
+            type="primary"
+            size="mini"
+            :disabled="isBtnDisabled"
+            @click="addDialogVisible = true"
+          >添加属性</el-button>
           <!-- 静态属性表格 -->
           <el-table :data="onlyTableData" border stripe>
             <!-- 展开行 -->
@@ -58,7 +68,7 @@
             <el-table-column type="index" label="序号"></el-table-column>
             <el-table-column label="属性名称" prop="attr_name"></el-table-column>
             <el-table-column label="操作">
-              <template slot-scope="">
+              <template slot-scope>
                 <el-button type="primary" icon="el-icon-edit" size="mini">修改</el-button>
                 <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
               </template>
@@ -67,6 +77,23 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+    <!-- 添加参数的对话框 -->
+    <el-dialog
+      :title="`添加${titleText}`"
+      :visible.sync="addDialogVisible"
+      width="50%"
+      @close="addDialogClose"
+    >
+      <el-form :model="addForm" :rules="addFormrules" ref="addFormRef" label-width="100px">
+        <el-form-item :label="titleText" prop="attr_name">
+          <el-input v-model="addForm.attr_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addParams">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -88,7 +115,17 @@ export default {
       //动态参数数据
       manyTableData: [],
       // 静态属性数据
-      onlyTableData: []
+      onlyTableData: [],
+      // 控制添加对话框的显示与隐藏
+      addDialogVisible: false,
+      // 添加参数表单的数据对象
+      addForm: {},
+      // 添加表单的验证规则
+      addFormrules: {
+        attr_name: [
+          { required: true, message: `请输入参数名称`, trigger: "blur" }
+        ]
+      }
     };
   },
   created() {
@@ -133,6 +170,29 @@ export default {
       } else {
         this.onlyTableData = res.data;
       }
+    },
+    // 监听添加对话框的关闭事件
+    addDialogClose() {
+      this.$refs.addFormRef.resetFields();
+    },
+    // 点击按钮，添加参数
+    addParams() {
+      this.$refs.addFormRef.validate(async valid => {
+        if (!valid) return;
+        const { data: res } = await this.$http.post(
+          `categories/${this.cateId}/attributes`,
+          {
+            attr_name: this.addForm.attr_name,
+            attr_sel: this.activeName
+          }
+        );
+        if (res.meta.status !== 201) {
+          return this.$message.error("添加参数失败！");
+        }
+        this.$message.success("添加参数成功！");
+        this.addDialogVisible = false;
+        this.getParamsData();
+      });
     }
   },
   computed: {
@@ -149,6 +209,12 @@ export default {
         return this.selectedCateKeys[2];
       }
       return null;
+    },
+    titleText() {
+      if (this.activeName === "many") {
+        return "动态参数";
+      }
+      return "静态属性";
     }
   }
 };
