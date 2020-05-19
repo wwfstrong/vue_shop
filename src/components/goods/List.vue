@@ -29,11 +29,16 @@
           <template slot-scope="scope">{{scope.row.add_time | dataFormat}}</template>
         </el-table-column>
         <el-table-column label="操作" width="130">
-          <template>
+          <template slot-scope="scope">
             <!-- 修改按钮 -->
             <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
             <!-- 删除按钮 -->
-            <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              @click="removeById(scope.row.goods_id)"
+            ></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -89,6 +94,32 @@ export default {
     // 监听 页码值 改变事件
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage;
+      this.getGoodsList();
+    },
+    //点击按钮删除参数
+    async removeById(id) {
+      //弹框询问用户是否删除数据
+      const confirmResult = await this.$confirm(
+        "此操作将永久删除该商品, 是否继续?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).catch(err => {
+        return err;
+      });
+
+      if (confirmResult !== "confirm") {
+        return this.$message.info("已取消删除");
+      }
+      const { data: res } = await this.$http.delete(`goods/${id}`);
+      if (res.meta.status !== 200) {
+        return this.$message.error("删除商品失败");
+      }
+      this.$message.success("删除商品成功");
+      //重新获取商品列表数据
       this.getGoodsList();
     }
   }
