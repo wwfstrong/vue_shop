@@ -16,7 +16,7 @@
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary">添加用户</el-button>
+          <el-button type="primary" @click="goAddpage">添加商品</el-button>
         </el-col>
       </el-row>
       <!-- 用户列表区域 -->
@@ -95,6 +95,10 @@ export default {
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage;
       this.getGoodsList();
+    },
+    // 点击按钮，添加商品
+    goAddpage() {
+     this.$router.push('/goods/add')
     },
     //点击按钮删除参数
     async removeById(id) {
