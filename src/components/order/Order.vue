@@ -38,7 +38,14 @@
               <el-button type="primary" icon="el-icon-edit" size="mini" @click="showBox"></el-button>
             </el-tooltip>
             <!-- 物流进度按钮 -->
-            <el-button type="success" icon="el-icon-location" size="mini"></el-button>
+            <el-tooltip effect="dark" content="物流进度按钮" placement="top" :enterable="false">
+              <el-button
+                type="success"
+                icon="el-icon-location"
+                size="mini"
+                @click="showProgressBox"
+              ></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -83,6 +90,17 @@
         <el-button type="primary" @click="addressVisible = false">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 物流进度对话框 -->
+    <el-dialog title="物流进度" :visible.sync="porgreVisible" width="50%">
+      <!-- 时间线 -->
+      <el-timeline>
+        <el-timeline-item
+          v-for="(activity, index) in progreInfo"
+          :key="index"
+          :timestamp="activity.time"
+        >{{activity.context}}</el-timeline-item>
+      </el-timeline>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -112,7 +130,9 @@ export default {
           { required: true, message: "请输入详细地址", trigger: "blur" }
         ]
       },
-      cityData: cityData
+      cityData: cityData,
+      porgreVisible: false,
+      progreInfo: []
     };
   },
   created() {
@@ -144,8 +164,18 @@ export default {
     showBox() {
       this.addressVisible = true;
     },
-    addressDialogClosed(){
-        this.$refs.addressFormRef.resetFields()
+    addressDialogClosed() {
+      this.$refs.addressFormRef.resetFields();
+    },
+    // 显示物流进度对话框
+    async showProgressBox() {
+      const { data: res } = await this.$http.get("/kuaidi/804909574412544580");
+      if (res.meta.status !== 200) {
+        return this.$message.error("获取物流进度失败！");
+      }
+      this.progreInfo = res.data;
+      this.porgreVisible = true;
+      console.log(this.progreInfo);
     }
   }
 };
