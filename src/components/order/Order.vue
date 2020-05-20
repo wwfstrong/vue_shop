@@ -33,11 +33,11 @@
         </el-table-column>
         <el-table-column label="操作" width="130">
           <template>
-            <!-- 修改按钮 -->
+            <!-- 修改订单地址按钮 -->
             <el-tooltip effect="dark" content="修改订单地址" placement="top" :enterable="false">
-              <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+              <el-button type="primary" icon="el-icon-edit" size="mini" @click="showBox"></el-button>
             </el-tooltip>
-            <!-- 删除按钮 -->
+            <!-- 物流进度按钮 -->
             <el-button type="success" icon="el-icon-location" size="mini"></el-button>
           </template>
         </el-table-column>
@@ -54,9 +54,39 @@
         background
       ></el-pagination>
     </el-card>
+    <!-- 修改订单地址对话框 -->
+    <el-dialog title="修改地址" :visible.sync="addressVisible" width="50%" @close="addressDialogClosed">
+      <!-- 内容主题区 -->
+      <el-form
+        :model="addressForm"
+        :rules="addressFormRules"
+        ref="addressFormRef"
+        label-width="80px"
+      >
+        <el-form-item label="省市区县" prop="address1">
+          <!-- 级联选择器 -->
+          <el-cascader
+            expand-trigger="hover"
+            :options="cityData"
+            v-model="addressForm.address1"
+            clearable
+            change-on-select
+          ></el-cascader>
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address2">
+          <el-input v-model="addressForm.address2"></el-input>
+        </el-form-item>
+      </el-form>
+      <!-- 底部区域 -->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addressVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addressVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
+import cityData from "./citydata.js";
 export default {
   data() {
     return {
@@ -68,7 +98,21 @@ export default {
       // 商品列表
       orderList: [],
       // 总数据条数
-      total: 0
+      total: 0,
+      addressVisible: false,
+      addressForm: {
+        address1: [],
+        address2: ""
+      },
+      addressFormRules: {
+        address1: [
+          { required: true, message: "请选择省市区县", trigger: "blur" }
+        ],
+        address2: [
+          { required: true, message: "请输入详细地址", trigger: "blur" }
+        ]
+      },
+      cityData: cityData
     };
   },
   created() {
@@ -95,9 +139,19 @@ export default {
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage;
       this.getOrderList();
+    },
+    // 显示修改订单地址对话框
+    showBox() {
+      this.addressVisible = true;
+    },
+    addressDialogClosed(){
+        this.$refs.addressFormRef.resetFields()
     }
   }
 };
 </script>
 <style lang="less" scoped>
+.el-cascader {
+  width: 100%;
+}
 </style>
